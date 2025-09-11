@@ -168,4 +168,46 @@ const updateStatus = async (req, res) => {
 
 
 }
-export { verifyStripe, placeOrder, placeOrderStripe, allOrders, updateStatus, userOrders, } 
+export { verifyStripe, placeOrder, placeOrderStripe, allOrders, updateStatus, userOrders, cancelOrder } 
+// Add ability for a user to cancel their own order before it is shipped/delivered
+// This marks the order status as "Cancelled". Refund handling for paid orders is out of scope
+// because we are not storing payment intent/transaction identifiers in the current schema.
+const cancelOrder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { orderId } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: "orderId is required" });
+    }
+
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (String(order.userId) !== String(userId)) {
+      return res.status(403).json({ success: false, message: "Not authorized to cancel this order" });
+    }
+
+    if (["Cancelled", "Delivered", "cancelled", "delivered"].includes(order.status)) {
+      return res.status(400).json({ success: false, message: `Cannot cancel an order with status ${order.status}` });
+    }
+
+    // Optional: disallow cancel after shipped/dispatch
+    if (["Shipped", "Out for Delivery", "shipped", "out for delivery"].includes(order.status)) {
+      return res.status(400).json({ success: false, message: `Order already ${order.status}` });
+    }
+
+    // Normalize to lowercase for admin filters
+    order.status = "cancelled";
+    await order.save();
+
+    return res.json({ success: true, message: "Order cancelled", order });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+ 

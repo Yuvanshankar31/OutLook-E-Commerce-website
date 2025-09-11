@@ -8,7 +8,10 @@ export const ShopContext = createContext();
 const ShopContextProvider = (props) => {
   const currency = '₹';
   const delivery_fee = 10;
-  const backendUrl = 'https://ecommerce-backend-hjqt.onrender.com';
+  // Always point to an API server, not the frontend origin
+  const backendUrl = 
+    import.meta.env.VITE_BACKEND_URL ||
+    'http://localhost:4000';
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [cartItems, setCartItems] = useState({});

@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import Title from '../components/Title';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Orders = () => {
   const { token, currency } = useContext(ShopContext);
@@ -39,6 +40,7 @@ const Orders = () => {
             item['status'] = order.status;
             item['paymentMethod'] = order.paymentMethod;
             item['date'] = order.date || 'Unknown';
+            item['orderId'] = order._id;
             allOrdersItem.push(item);
           });
         });
@@ -56,6 +58,70 @@ const Orders = () => {
   useEffect(() => {
     loadOrderData();
   }, []);
+
+  const handleCancelOrder = async (orderId) => {
+    try {
+      if (!token) return;
+      const baseCandidates = Array.from(new Set([
+        backendUrl,
+        (typeof import.meta !== 'undefined' ? import.meta.env.VITE_BACKEND_URL : undefined),
+        (typeof window !== 'undefined' ? window.location.origin : undefined),
+        'https://ecommerce-backend-hjqt.onrender.com',
+        'http://localhost:4000',
+      ].filter(Boolean)));
+
+      let success = false;
+      let lastError;
+      for (const base of baseCandidates) {
+        try {
+          const res = await axios.post(
+            `${base}/api/order/cancel`,
+            { orderId },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (res.data?.success) {
+            success = true;
+            break;
+          } else {
+            lastError = res.data?.message || 'Unknown error';
+          }
+        } catch (e) {
+          lastError = e?.response?.data?.message || e.message;
+          // try next candidate on 404/Network
+          if (!(e?.response?.status === 404 || e?.code === 'ERR_NETWORK')) {
+            break;
+          }
+        }
+      }
+
+      if (success) {
+        setOrderData(prev => prev.map(i => i.orderId === orderId ? { ...i, status: 'cancelled' } : i));
+        toast.success('Order cancelled');
+        loadOrderData();
+      } else {
+        throw new Error(lastError || 'Failed to cancel');
+      }
+    } catch (error) {
+      const status = error?.response?.status;
+      const bodyMsg = error?.response?.data?.message;
+      if (status === 404) {
+        toast.error('Endpoint not found. Please update VITE_BACKEND_URL and try again.');
+      } else {
+        console.error('Cancel order failed', error?.response?.data || error.message);
+        toast.error(bodyMsg || 'Failed to cancel order');
+      }
+    }
+  };
+
+  const handleTrackOrder = (item) => {
+    try {
+      // Placeholder: replace with real tracking flow if available
+      console.log('Track order clicked', item);
+      alert(`Tracking not available yet. Current status: ${item.status}`);
+    } catch (e) {
+      console.error('Track order handler error', e);
+    }
+  };
 
   return (
     <div className='border-t pt-16'>
@@ -98,12 +164,22 @@ const Orders = () => {
                   <p className='min-w-2 h-2 rounded-full bg-green-500'></p>
                   <p className='text-sm md:text-base'>{item.status || 'Pending'}</p>
                 </div>
+                <div className='flex items-center gap-3'>
+                {(['cancelled','delivered','shipped','out for delivery','Cancelled','Delivered','Shipped','Out for Delivery'].includes(item.status) ? false : true) && (
+                  <button
+                    onClick={() => handleCancelOrder(item.orderId)}
+                    className='border px-4 py-2 text-sm font-medium rounded-sm text-red-600 border-red-500'
+                  >
+                    Cancel
+                  </button>
+                )}
                 <button 
   onClick={() => handleTrackOrder(item)} 
   className='border px-4 py-2 text-sm font-medium rounded-sm'
 >
   Track Order
-</button>
+                </button>
+                </div>
               </div>
             </div>
           ))

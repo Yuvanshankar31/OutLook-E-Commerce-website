@@ -65,6 +65,8 @@ const Orders = () => {
 
   useEffect(() => {
     fetchAllOrders();
+    const id = setInterval(fetchAllOrders, 15000);
+    return () => clearInterval(id);
   }, []);
 
   // Filter orders based on status
@@ -145,7 +147,7 @@ const Orders = () => {
         </div>
       </div>
 
-      {/* Filters Section */}
+      {/* Filters / Actions Section */}
       <div className="filters-section">
         <div className="filter-group">
           <label className="filter-label">Filter by Status:</label>
@@ -162,6 +164,9 @@ const Orders = () => {
             <option value="cancelled">Cancelled</option>
           </select>
         </div>
+        <button className="refresh-button" onClick={fetchAllOrders}>
+          Refresh
+        </button>
       </div>
 
       {/* Orders List */}

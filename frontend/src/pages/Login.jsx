@@ -41,7 +41,11 @@ const Login = () => {
           console.warn('User data is missing from response.');
         }
       } else {
-        toast.error(message || 'Authentication failed.');
+        let shownMsg = message || 'Authentication failed.';
+        if (currentState !== 'Sign Up' && /already\s*exi(ts|st)/i.test(shownMsg)) {
+          shownMsg = 'User does not exist';
+        }
+        toast.error(shownMsg);
       }
     } catch (error) {
       console.error('Error:', error);
