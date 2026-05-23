@@ -8,9 +8,9 @@ Designed with modern typography, smooth user experiences, glassmorphic accents, 
 
 ## 🖥️ Platform Showcase
 
-Below is a preview of the premium **Admin Analytics & Management Dashboard**, showcasing sales performance metrics, transaction tracking, and inventory control:
+Below is a preview of the actual **E-Commerce Storefront Showcase**, representing the real visual branding and front-end interface layout of the application:
 
-![E-Commerce Dashboard Mockup](dashboard_preview.png)
+![E-Commerce Storefront Showcase](project_hero.png)
 
 ---
 
