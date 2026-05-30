@@ -1,8 +1,65 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { assets } from '../assets/assets'
+import axios from 'axios'
+import { backendUrl } from '../App'
 
 const Sidebar = () => {
+  const [stats, setStats] = useState({
+    products: 0,
+    pending: 0,
+    revenue: 0,
+  });
+
+  const fetchStats = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      // 1. Fetch Products
+      const prodRes = await axios.get(`${backendUrl}/api/product/list`);
+      let productCount = 0;
+      if (prodRes.data.success) {
+        productCount = prodRes.data.products.length;
+      }
+
+      // 2. Fetch Orders
+      const orderRes = await axios.post(
+        `${backendUrl}/api/order/list`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      let pendingCount = 0;
+      let completedRevenue = 0;
+      if (orderRes.data.success) {
+        const orders = orderRes.data.orders;
+        pendingCount = orders.filter(order => order.status === 'pending').length;
+        completedRevenue = orders
+          .filter(order => order.status === 'completed')
+          .reduce((sum, order) => sum + order.amount, 0);
+      }
+
+      setStats({
+        products: productCount,
+        pending: pendingCount,
+        revenue: completedRevenue,
+      });
+    } catch (error) {
+      console.error("Error fetching stats for sidebar:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+    // Poll every 15 seconds to keep stats synchronized
+    const interval = setInterval(fetchStats, 15000);
+    return () => clearInterval(interval);
+  }, []);
   return (
     <aside className="admin-sidebar">
       <div className="sidebar-content">
@@ -70,7 +127,7 @@ const Sidebar = () => {
                   </svg>
                 </div>
                 <div className="stat-content">
-                  <span className="stat-value">150</span>
+                  <span className="stat-value">{stats.products}</span>
                   <span className="stat-label">Products</span>
                 </div>
               </div>
@@ -82,7 +139,7 @@ const Sidebar = () => {
                   </svg>
                 </div>
                 <div className="stat-content">
-                  <span className="stat-value">12</span>
+                  <span className="stat-value">{stats.pending}</span>
                   <span className="stat-label">Pending</span>
                 </div>
               </div>
@@ -95,7 +152,7 @@ const Sidebar = () => {
                   </svg>
                 </div>
                 <div className="stat-content">
-                  <span className="stat-value">₹45K</span>
+                  <span className="stat-value">₹{stats.revenue >= 1000 ? `${(stats.revenue / 1000).toFixed(stats.revenue % 1000 === 0 ? 0 : 1)}K` : stats.revenue}</span>
                   <span className="stat-label">Revenue</span>
                 </div>
               </div>
