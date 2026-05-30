@@ -521,7 +521,7 @@ body {
   border-bottom: 1px solid #e2e8f0;
 }
 
-.header-content {
+.page-header .header-content {
   display: flex;
   flex-direction: column;
 }
@@ -540,7 +540,7 @@ body {
   margin: 0;
 }
 
-.header-actions {
+.page-header .header-actions {
   display: flex;
   align-items: center;
 }
@@ -551,7 +551,7 @@ body {
   gap: 24px;
 }
 
-.stat-item {
+.page-header .stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -561,14 +561,14 @@ body {
   border: 1px solid #e2e8f0;
 }
 
-.stat-number {
+.page-header .stat-number {
   font-size: 24px;
   font-weight: 700;
   color: #3b82f6;
   line-height: 1;
 }
 
-.stat-label {
+.page-header .stat-label {
   font-size: 12px;
   color: #64748b;
   margin-top: 4px;
